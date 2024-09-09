@@ -1,0 +1,33 @@
+{
+  "name": "cunner",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A cloud computing platform, where you can test the code output safely",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yahia-soliman/cunner.git"
+  },
+  "keywords": [
+    "Docker",
+    "Nodejs",
+    "MongoDB"
+  ],
+  "author": "Yahia Soliman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yahia-soliman/cunner/issues"
+  },
+  "homepage": "https://github.com/yahia-soliman/cunner#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.10.0",
+    "eslint": "^9.10.0",
+    "globals": "^15.9.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.4.0"
+  }
+}
