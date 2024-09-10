@@ -8,7 +8,10 @@ const socketPath = '/var/run/docker.sock';
  * Docker Engine API docs:
  *    https://docs.docker.com/reference/api/engine/v1.46/
  */
-export default function dockerAPI(path: string, method: string = 'GET') {
+export default function dockerAPI(
+  path: string,
+  method: string = 'GET',
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const req = http.request({ socketPath, path, method }, (res) => {
       let data = '';
