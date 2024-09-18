@@ -1,45 +1,51 @@
-import dockerAPI, { Container, dockerPull } from '../utils/docker.js';
+import dockerAPI, { dockerPull } from '../utils/docker/index.js';
+import { Container } from '../utils/docker/container.js';
+
+const image = 'python:3.7-alpine';
 
 describe('Docker Enginer API connector: dockerAPI function', () => {
-  it('GET /containers/json return array', async () => {
-    const { body } = await dockerAPI('/containers/json');
-    expect(JSON.parse(body)).toBeInstanceOf(Array);
-  });
-});
-
-describe('Pull image from docker hub: dockerPull', () => {
-  const image = 'python:3.7-alpine';
   let timeout: number;
-  let container: Container;
 
   beforeAll(() => {
     timeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
   });
 
+  it('GET /containers/json return array', async () => {
+    const { body } = await dockerAPI('/containers/json');
+    expect(JSON.parse(body)).toBeInstanceOf(Array);
+  });
+
+  afterAll(() => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
+  });
+});
+
+describe('Pull image from docker hub: dockerPull', () => {
   it('pulls the correct image', async () => {
     const { body } = await dockerPull(image);
     expect(body.includes(image)).toBeTrue();
   });
+});
+
+describe('Container Class:', () => {
+  let container: Container;
 
   it('creates a container', async () => {
     expect(container).toBeUndefined();
-    container =
-      (await Container.create({
-        Image: image,
-        Cmd: ['sh', '-c', 'python3 <<EOF\nprint("Hello There!\\nboi")\nEOF'],
-      })) || container;
+    container = await Container.create({
+      Image: image,
+      Cmd: ['sh', '-c', 'python3 <<EOF\nprint("Hello There!\\nboi")\nEOF'],
+    });
     expect(container).not.toBeNull();
   });
 
-  it('starts the container', async () => {
-    expect(container).not.toBeNull();
+  it('starts a container', async () => {
     const { res } = await container.start();
     expect(res.statusCode).toBe(204);
   });
 
   it('waits for the container to exit', async () => {
-    expect(container).not.toBeNull();
     const { res } = await container.wait();
     expect(res.statusCode).toBe(200);
   });
@@ -52,9 +58,5 @@ describe('Pull image from docker hub: dockerPull', () => {
   it('deletes the container', async () => {
     const { res } = await container.remove();
     expect(res.statusCode).toBe(204);
-  });
-
-  afterAll(() => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
   });
 });
