@@ -40,14 +40,20 @@ describe('Container Class:', () => {
     expect(container).not.toBeNull();
   });
 
+  it('writes the code into a file', async () => {
+    const res = await container.writeFile('hello there!\nboi');
+    console.log(res.statusCode, res.body);
+    expect(res.statusCode).toBe(200);
+  });
+
   it('starts a container', async () => {
-    const { res } = await container.start();
-    expect(res.statusCode).toBe(204);
+    const { statusCode } = await container.start();
+    expect(statusCode).toBe(204);
   });
 
   it('waits for the container to exit', async () => {
-    const { res } = await container.wait();
-    expect(res.statusCode).toBe(200);
+    const { statusCode } = await container.wait();
+    expect(statusCode).toBe(200);
   });
 
   it('gets the logs', async () => {
@@ -56,7 +62,7 @@ describe('Container Class:', () => {
   });
 
   it('deletes the container', async () => {
-    const { res } = await container.remove();
-    expect(res.statusCode).toBe(204);
+    const { statusCode } = await container.remove();
+    expect(statusCode).toBe(204);
   });
 });

@@ -1,4 +1,8 @@
-import dockerAPI from "./index.js";
+import { promisify } from 'util';
+import { gzip } from 'zlib';
+import dockerAPI from './index.js';
+
+const gz = promisify(gzip);
 
 export interface ContainerRunOpts {
   Image?: string;
@@ -26,7 +30,7 @@ export class Container {
     if (body.Id) {
       return new Container(body.Id);
     }
-    throw new Error("Cannot Create a container");
+    throw new Error('Cannot Create a container');
   }
 
   /** Start the container */
@@ -55,8 +59,18 @@ export class Container {
   // async download(options) { }
 
   /** Upload data to a file inside the container */
-  // async upload(options) {
-  // create a gzip from string
-  // const { res, data } = await dockerAPI(this.prefix + '/archive', 'PUT')
-  // }
+  async writeFile(str: string, path = '/tmp') {
+    const gzipped = await gz(str);
+    return await dockerAPI(
+      this.prefix + `/archive?path=${path}`,
+      'PUT',
+      gzipped,
+      {
+        headers: {
+          'content-type': 'application/octet-stream',
+          'content-encoding': 'gzip',
+        },
+      },
+    );
+  }
 }

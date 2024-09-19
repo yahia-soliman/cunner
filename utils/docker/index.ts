@@ -2,6 +2,11 @@ import http from 'http';
 
 const socketPath = '/var/run/docker.sock';
 
+interface Response {
+  body: string;
+  statusCode?: number;
+}
+
 /**
  * Create a request to the docker engine is the current machine
  *
@@ -13,14 +18,14 @@ export default function dockerAPI(
   method = 'GET',
   body?: unknown,
   opts?: http.RequestOptions,
-): Promise<{ res: http.IncomingMessage; body: string }> {
+): Promise<Response> {
   return new Promise((resolve, reject) => {
     const req = http.request({ socketPath, path, method, ...opts }, (res) => {
       let body = '';
       res.on('data', (chunk: Buffer) => {
         body += chunk.toString();
       });
-      res.on('end', () => resolve({ res, body }));
+      res.on('end', () => resolve({body, statusCode: res.statusCode}));
     });
 
     req.on('error', reject);

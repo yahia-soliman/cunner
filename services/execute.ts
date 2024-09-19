@@ -2,7 +2,7 @@
  * This modules handles code execution logic
  */
 
-import { Container } from '../utils/docker.js';
+import { Container } from '../utils/docker/container.js';
 import { Language } from './languages.js';
 
 /**
