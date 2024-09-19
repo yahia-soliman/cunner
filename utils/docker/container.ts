@@ -1,8 +1,5 @@
-import { promisify } from 'util';
-import { gzip } from 'zlib';
 import dockerAPI from './index.js';
-
-const gz = promisify(gzip);
+import { pack } from 'tar-stream';
 
 export interface ContainerRunOpts {
   Image?: string;
@@ -20,12 +17,13 @@ export class Container {
 
   /** Create a container */
   static async create(options: ContainerRunOpts): Promise<Container> {
-    const res = await dockerAPI(
-      '/containers/create',
-      'POST',
-      JSON.stringify(options),
-      { headers: { 'content-type': 'application/json' } },
-    );
+    const res = await dockerAPI('/containers/create', 'POST', (req) => {
+      req.setHeader('Content-Type', 'application/json');
+      req.write(JSON.stringify(options), (err) => {
+        if (err) throw err;
+        req.end();
+      });
+    });
     const body = JSON.parse(res.body);
     if (body.Id) {
       return new Container(body.Id);
@@ -59,17 +57,15 @@ export class Container {
   // async download(options) { }
 
   /** Upload data to a file inside the container */
-  async writeFile(str: string, path = '/tmp') {
-    const gzipped = await gz(str);
+  async writeFile(name: string, content: string, outdir = './') {
+    const tar = pack();
+    tar.entry({ name }, content, () => tar.finalize());
     return await dockerAPI(
-      this.prefix + `/archive?path=${path}`,
+      this.prefix + `/archive?path=${outdir}`,
       'PUT',
-      gzipped,
-      {
-        headers: {
-          'content-type': 'application/octet-stream',
-          'content-encoding': 'gzip',
-        },
+      (req) => {
+        req.setHeader('Content-Type', 'application/x-tar');
+        tar.pipe(req, { end: true });
       },
     );
   }

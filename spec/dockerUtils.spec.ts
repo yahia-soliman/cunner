@@ -35,14 +35,13 @@ describe('Container Class:', () => {
     expect(container).toBeUndefined();
     container = await Container.create({
       Image: image,
-      Cmd: ['sh', '-c', 'python3 <<EOF\nprint("Hello There!\\nboi")\nEOF'],
+      Cmd: ['python3', 'test.py'],
     });
     expect(container).not.toBeNull();
   });
 
   it('writes the code into a file', async () => {
-    const res = await container.writeFile('hello there!\nboi');
-    console.log(res.statusCode, res.body);
+    const res = await container.writeFile('test.py', 'print("Hello There!\\nboi")', './');
     expect(res.statusCode).toBe(200);
   });
 
@@ -57,8 +56,8 @@ describe('Container Class:', () => {
   });
 
   it('gets the logs', async () => {
-    const { body } = await container.logs();
-    expect(body).toContain('Hello There!');
+    const res = await container.logs();
+    expect(res.body).toContain('Hello There!');
   });
 
   it('deletes the container', async () => {

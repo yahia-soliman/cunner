@@ -16,21 +16,19 @@ interface Response {
 export default function dockerAPI(
   path: string,
   method = 'GET',
-  body?: unknown,
-  opts?: http.RequestOptions,
+  cb?: (req: http.ClientRequest) => void,
 ): Promise<Response> {
   return new Promise((resolve, reject) => {
-    const req = http.request({ socketPath, path, method, ...opts }, (res) => {
+    const req = http.request({ socketPath, path, method }, (res) => {
       let body = '';
       res.on('data', (chunk: Buffer) => {
         body += chunk.toString();
       });
-      res.on('end', () => resolve({body, statusCode: res.statusCode}));
+      res.on('end', () => resolve({ body, statusCode: res.statusCode }));
     });
-
     req.on('error', reject);
-    if (body) req.write(body);
-    req.end();
+    if (cb) cb(req);
+    else req.end();
   });
 }
 
