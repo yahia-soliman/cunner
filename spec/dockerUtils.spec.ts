@@ -1,4 +1,4 @@
-import dockerAPI, { dockerPull } from '../utils/docker/index.js';
+import { dockerAPI, dockerPull } from '../utils/docker/index.js';
 import { Container } from '../utils/docker/container.js';
 
 const image = 'python:3.7-alpine';
