@@ -13,7 +13,7 @@ interface Response {
  * Docker Engine API docs:
  *    https://docs.docker.com/reference/api/engine/v1.46/
  */
-export default function dockerAPI(
+export function dockerAPI(
   path: string,
   method = 'GET',
   cb?: (req: http.ClientRequest) => void,
@@ -33,6 +33,18 @@ export default function dockerAPI(
 }
 
 export async function dockerPull(image: string) {
-  const data = await dockerAPI(`/images/create?fromImage=${image}`, 'POST');
-  return data;
+  return await dockerAPI(`/images/create?fromImage=${image}`, 'POST');
 }
+
+export async function dockerImageRm(image: string, force = false) {
+  return await dockerAPI(`/images/${image}?force=${force}`, 'DELETE');
+}
+
+export default {
+  request: dockerAPI,
+  pull: dockerPull,
+  image: {
+    pull: dockerPull,
+    rm: dockerImageRm,
+  },
+};
