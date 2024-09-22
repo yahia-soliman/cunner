@@ -3,7 +3,7 @@
  */
 
 import { Container } from '../utils/docker/container.js';
-import { Language } from './languages.js';
+import { Language } from '../models/language.model.js';
 
 /**
  * Execute a code snippet in a container
@@ -15,13 +15,13 @@ import { Language } from './languages.js';
  */
 export async function execute(language: Language, code: string) {
   const container = await Container.create({
-    Image: language.image,
-    Cmd: [ 'sh', '-c' ,language.cmd],
+    Image: language.name,
+    Cmd: language.cmd,
   });
 
   if (container === null) throw new Error("Language is not supported");
 
-  // await container.upload(code);
+  await container.writeFile('SOURCE_CODE', code, './');
 
   await container.start(true);
 

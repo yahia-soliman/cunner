@@ -1,4 +1,4 @@
-import dockerAPI from './index.js';
+import { dockerAPI } from './index.js';
 import { pack } from 'tar-stream';
 
 export interface ContainerRunOpts {
