@@ -18,7 +18,7 @@ A cloud computing platform, where you can test the code output safely.
 - [x] Create Docker Container Wrapper
 - [x] Create Docker Image Wrapper
 - [x] Create and Test the Language Service
-- [ ] Create and Test the Snippet Service
+- [x] Create and Test the Snippet Service
 - [ ] Build the API and connect it with the services
 - [ ] Handle Validation before accessing the services
 - [ ] Handle Auth service, and Auth middlewares
