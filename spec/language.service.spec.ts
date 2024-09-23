@@ -1,5 +1,5 @@
 import { Language, languages } from '../models/language.model.js';
-import * as service from '../services/languages.js';
+import * as service from '../services/language.js';
 
 describe('Language Service', () => {
   let timeout: number;
