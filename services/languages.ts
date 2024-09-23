@@ -76,6 +76,10 @@ export async function newVersion(
   langName: string,
   version: string,
 ): Promise<Language> {
+  const doc = await getByName(langName);
+  if (doc.versions.includes(version))
+    throw new CunnErr(409, `Version ${version} already exists`);
+
   const result = await languages.updateOne(
     { name: langName },
     {
@@ -84,10 +88,8 @@ export async function newVersion(
     },
   );
 
-  if (result.matchedCount < 1)
-    throw new CunnErr(404, `Language ${langName} Not found`);
-  if (result.modifiedCount < 1)
-    throw new CunnErr(409, `Version ${version} already exists`);
+  if (!result.acknowledged)
+    throw new CunnErr(500, 'Internal Server Error');
 
   await __installImage(langName, version);
 
