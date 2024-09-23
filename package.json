@@ -5,8 +5,9 @@
   "description": "A cloud computing platform, where you can test the code output safely",
   "main": "index.js",
   "scripts": {
-    "test": "rm -rf spec/dist; tsc -p spec && jasmine --color --config=spec/jasmine.json",
-    "build": "rm -rf dist; tsc"
+    "test": "rm -rf spec/dist; tsc -p spec && DB_NAME=cunner_test jasmine --color --fail-fast --config=spec/jasmine.json",
+    "build": "rm -rf dist; tsc",
+    "start": "node --env-file=./.env ./dist/index.js"
   },
   "repository": {
     "type": "git",

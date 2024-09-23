@@ -4,21 +4,10 @@ import { Container } from '../utils/docker/container.js';
 const image = 'python:3.7-alpine';
 
 describe('Docker Enginer API connector: dockerAPI function', () => {
-  let timeout: number;
-
-  beforeAll(() => {
-    timeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
-  });
-
   it('GET /containers/json return array', async () => {
     const { body } = await dockerAPI('/containers/json');
     expect(JSON.parse(body)).toBeInstanceOf(Array);
-  });
-
-  afterAll(() => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
-  });
+  }, 100000);
 });
 
 describe('Pull image from docker hub: dockerPull', () => {
@@ -41,7 +30,11 @@ describe('Container Class:', () => {
   });
 
   it('writes the code into a file', async () => {
-    const res = await container.writeFile('test.py', 'print("Hello There!\\nboi")', './');
+    const res = await container.writeFile(
+      'test.py',
+      'print("Hello There!\\nboi")',
+      './',
+    );
     expect(res.statusCode).toBe(200);
   });
 

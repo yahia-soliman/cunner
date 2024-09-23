@@ -1,6 +1,6 @@
 import http from 'http';
 
-const socketPath = '/var/run/docker.sock';
+const socketPath = process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock';
 
 interface Response {
   body: string;
