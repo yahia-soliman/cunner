@@ -3,6 +3,22 @@
 A cloud computing platform, where you can test the code output safely.
 
 
+## Features
+- **User Authentication**
+- Storing code snippets, executing them, and storing the output
+- Supporting different languges dynamicly from Docker hub, using Admin account
+- Supporting different versions of languages
+
+
+### Usage
+After creating an account and registering you can discover available languages and versions using `GET /languages` you can Create, Retrieve, Update, or Delete snippets and run them `GET /snippets/{id}/run`
+
+### Adminstration
+After logging in as an Admin, you can:
+- Support different languages with different versions, as long as it is in Docker hub and you know how to run a file written with it.
+- Delete entire languages or specific versions
+
+
 ## Dependencies
 
 |                                       | recommended version |
@@ -19,7 +35,7 @@ A cloud computing platform, where you can test the code output safely.
 - [x] Create Docker Image Wrapper
 - [x] Create and Test the Language Service
 - [x] Create and Test the Snippet Service
-- [ ] Build the API and connect it with the services
-- [ ] Handle Validation before accessing the services
+- [x] Build the API and connect it with the services
+- [x] Handle Validation before accessing the services
 - [ ] Handle Auth service, and Auth middlewares
 - [ ] Make documentation with Scalar or Redoc
