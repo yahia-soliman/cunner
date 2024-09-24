@@ -17,8 +17,7 @@ describe('Language Service', () => {
   });
 
   it('Creates A new Language', async () => {
-    const { language, errors } = await service.newLanguage(doc);
-    expect(errors.length).toEqual(0);
+    const language = await service.newLanguage(doc);
     expect(language.name).toEqual(doc.name);
     expect(language.created).toBeInstanceOf(Date);
     expect(language.updated).toBeInstanceOf(Date);

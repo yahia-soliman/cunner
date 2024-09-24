@@ -43,18 +43,16 @@ async function __installImage(langName: string, version: string) {
  */
 export async function newLanguage(
   language: Language,
-): Promise<{ language: Language; errors: string[] }> {
+): Promise<Language> {
   const doc = await languages.findOne({ name: language.name });
   if (doc) throw new CunnErr(409, 'Language already exists');
 
-  const errors: string[] = [];
   language.versions = language.versions.filter(async (v) => {
     try {
       await __installImage(language.name, v);
       return true;
-    } catch (err) {
-      errors.push((err as CunnErr).message);
-      return false;
+    } catch (_) {
+      return _ && false;
     }
   });
 
@@ -62,7 +60,7 @@ export async function newLanguage(
   const { acknowledged } = await languages.insertOne(language);
   if (!acknowledged) throw new CunnErr(500, 'Internal Server Error');
 
-  return { language, errors };
+  return language;
 }
 
 /**
