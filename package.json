@@ -7,7 +7,9 @@
   "scripts": {
     "test": "rm -rf spec/dist; tsc -p spec && DB_NAME=cunner_test jasmine --color --fail-fast --config=spec/jasmine.json",
     "build": "rm -rf dist; tsc",
-    "start": "node --env-file=./.env ./dist/index.js"
+    "server": "node --env-file=./.env ./dist/server.js",
+    "build:dev": "tsc --watch",
+    "server:dev": "node --watch --env-file=./.env ./dist/server.js"
   },
   "repository": {
     "type": "git",
@@ -37,6 +39,7 @@
     "typescript-eslint": "^8.4.0"
   },
   "dependencies": {
+    "fastify": "^5.0.0",
     "mongodb": "^6.9.0",
     "tar-stream": "^3.1.7"
   }
