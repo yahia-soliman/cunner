@@ -1,6 +1,37 @@
-import { FastifyInstance, RouteShorthandOptions } from 'fastify';
+import { FastifyInstance, FastifySchema, FastifySchemaCompiler } from 'fastify';
 import * as service from '../services/language.js';
 import { Language } from '../models/language.model.js';
+import yup, { Schema, ValidateOptions } from 'yup';
+import { FastifySerializerCompiler } from 'fastify/types/schema.js';
+
+const yupOptions: ValidateOptions = {
+  strict: false,
+  abortEarly: true,
+  stripUnknown: true,
+  recursive: true,
+};
+const validatorCompiler: FastifySchemaCompiler<NoInfer<FastifySchema>> = ({
+  schema,
+}) => {
+  return function (data) {
+    try {
+      const value = (schema as Schema).validateSync(data, yupOptions);
+      return { value };
+    } catch (e) {
+      return { error: e as Error };
+    }
+  };
+};
+const serializerCompiler: FastifySerializerCompiler<Schema> = ({ schema }) => {
+  return (data: unknown) => {
+    try {
+      const result = schema.validateSync(data, yupOptions);
+      return JSON.stringify(result);
+    } catch (e) {
+      return JSON.stringify({ error: e as Error });
+    }
+  };
+};
 
 interface BodyOrParams {
   name: string;
@@ -9,100 +40,82 @@ interface BodyOrParams {
   cmd: string[];
 }
 
-const getAllResponseSchema = {
-  name: { type: 'string' },
-  versions: { type: 'array', items: { type: 'string' }, minItems: 1 },
+const defaultProps = {
+  created: yup.date(),
+  updated: yup.date(),
 };
 
-const getAllOpts: RouteShorthandOptions = {
-  schema: {
-    response: {
-      200: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: getAllResponseSchema,
-        },
-      },
-    },
-  },
+const getAllRes = {
+  name: yup.string(),
+  versions: yup.array().of(yup.string()),
 };
 
-const getByNameOpts: RouteShorthandOptions = {
-  schema: {
-    response: {
-      200: {
-        type: 'object',
-        properties: {
-          ...getAllResponseSchema,
-          created: { type: 'string' },
-          updated: { type: 'string' },
-        }
-      },
-    },
-  },
-};
+const getIdRes = { ...getAllRes, ...defaultProps };
 
-const postBodySchema = {
-  ...getAllResponseSchema,
-  fileName: { type: 'string' },
-  cmd: { type: 'array', items: { type: 'string' }, minItems: 1 },
-};
-
-const opts: RouteShorthandOptions = {
-  schema: {
-    body: {
-      type: 'object',
-      required: ['name', 'versions', 'cmd'],
-      properties: postBodySchema,
-    },
-    response: {
-      200: {
-        type: 'object',
-        properties: postBodySchema,
-      },
-    },
-  },
+const postBody = {
+  name: yup.string().required(),
+  versions: yup.array().of(yup.string()).required(),
+  cmd: yup.array().of(yup.string()).required().min(1),
 };
 
 /**
- * Encapsulates the routes
+ * Encapsulates the controller and validation logic for the language service
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 export default async function route(fastify: FastifyInstance) {
-  fastify.post('/', opts, async (req) => {
-    const { name, cmd, versions } = req.body as Language;
-    return service.newLanguage({ name, cmd, versions });
-  });
+  fastify.setValidatorCompiler(validatorCompiler);
+  fastify.setSerializerCompiler(serializerCompiler);
+  fastify.post<{ Body: Language }>(
+    '/',
+    {
+      schema: {
+        body: yup.object(postBody).required(),
+        response: { 200: yup.object(getIdRes) },
+      },
+    },
+    async (req) => {
+      return service.newLanguage(req.body);
+    },
+  );
 
-  fastify.post('/:name/:version', async (request) => {
-    const { name, version } = request.params as BodyOrParams;
+  fastify.post<{ Params: BodyOrParams }>('/:name/:version', async (request) => {
+    const { name, version } = request.params;
     return service.newVersion(name, version);
   });
 
-  fastify.get('/', getAllOpts, async () => {
-    return service.getAll();
-  });
+  fastify.get(
+    '/',
+    {
+      schema: { response: { 200: yup.array().of(yup.object(getAllRes)) } },
+    },
+    async () => service.getAll(),
+  );
 
-  fastify.get('/:name', getByNameOpts, async (request) => {
-    const { name } = request.params as BodyOrParams;
-    return service.getByName(name);
-  });
+  fastify.get<{ Params: BodyOrParams }>(
+    '/:name',
+    {
+      schema: { response: { 200: yup.object(getIdRes) } },
+    },
+    async (req) => service.getByName(req.params.name),
+  );
 
-  fastify.patch('/:name', async (request) => {
-    // we currently update only the cmd
-    const { cmd } = request.body as BodyOrParams;
-    const { name } = request.params as { name: string };
-    return service.updateCmd(name, cmd);
-  });
+  fastify.patch<{ Params: BodyOrParams; Body: BodyOrParams }>(
+    '/:name',
+    async (request) => {
+      // we currently update only the cmd
+      const { cmd } = request.body;
+      const { name } = request.params;
+      return service.updateCmd(name, cmd);
+    },
+  );
 
-  fastify.delete('/:name', async (request) => {
-    const { name } = request.params as BodyOrParams;
+  fastify.delete<{ Params: BodyOrParams }>('/:name', async (request) => {
+    const { name } = request.params;
     return service.deleteLanguage(name);
   });
 
-  fastify.delete('/:name/:version', async (request) => {
-    const { name, version } = request.params as BodyOrParams;
-    return service.deleteVersion(name, version);
-  });
+  fastify.delete<{ Params: BodyOrParams }>(
+    '/:name/:version',
+    async ({ params }) => service.deleteVersion(params.name, params.version),
+  );
 }

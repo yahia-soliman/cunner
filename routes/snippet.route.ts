@@ -1,42 +1,31 @@
-import { FastifyInstance, RouteShorthandOptions } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import * as service from '../services/snippet.js';
 import { Snippet } from '../models/snippet.model.js';
+import yup from 'yup';
 
-const postBodySchema = {
-  language: { type: 'string' },
-  version: { type: 'string' },
-  code: { type: 'string' },
-};
-
-const opts: RouteShorthandOptions = {
-  schema: {
-    body: {
-      type: 'object',
-      required: ['language', 'version', 'code'],
-      properties: postBodySchema,
-    },
-    response: {
-      200: {
-        type: 'object',
-        properties: {
-          ...postBodySchema,
-          created: { type: 'string' },
-          updated: { type: 'string' },
-          id: { type: 'string' },
-        },
-      }
-    },
-  },
+const postBody = {
+  language: yup.string().required(),
+  version: yup.string().required(),
+  code: yup.string().required().min(3),
 };
 
 /**
- * Encapsulates the routes
+ * Encapsulates the controller and validation for snippet service
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 export default async function route(fastify: FastifyInstance) {
-  fastify.post('/', opts, async (req) => {
-    return service.newSnippet(req.body as Snippet);
-  });
+  fastify.post(
+    '/',
+    {
+      schema: {
+        body: yup.object(postBody).required(),
+        response: { 200: yup.object(postBody) },
+      },
+    },
+    async (req) => {
+      return service.newSnippet(req.body as Snippet);
+    },
+  );
 
   fastify.get('/', async () => {
     return service.allSnippets({});
