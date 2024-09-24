@@ -1,37 +1,7 @@
-import { FastifyInstance, FastifySchema, FastifySchemaCompiler } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import * as service from '../services/language.js';
 import { Language } from '../models/language.model.js';
-import yup, { Schema, ValidateOptions } from 'yup';
-import { FastifySerializerCompiler } from 'fastify/types/schema.js';
-
-const yupOptions: ValidateOptions = {
-  strict: false,
-  abortEarly: true,
-  stripUnknown: true,
-  recursive: true,
-};
-const validatorCompiler: FastifySchemaCompiler<NoInfer<FastifySchema>> = ({
-  schema,
-}) => {
-  return function (data) {
-    try {
-      const value = (schema as Schema).validateSync(data, yupOptions);
-      return { value };
-    } catch (e) {
-      return { error: e as Error };
-    }
-  };
-};
-const serializerCompiler: FastifySerializerCompiler<Schema> = ({ schema }) => {
-  return (data: unknown) => {
-    try {
-      const result = schema.validateSync(data, yupOptions);
-      return JSON.stringify(result);
-    } catch (e) {
-      return JSON.stringify({ error: e as Error });
-    }
-  };
-};
+import yup from 'yup';
 
 interface BodyOrParams {
   name: string;
@@ -63,8 +33,6 @@ const postBody = {
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 export default async function route(fastify: FastifyInstance) {
-  fastify.setValidatorCompiler(validatorCompiler);
-  fastify.setSerializerCompiler(serializerCompiler);
   fastify.post<{ Body: Language }>(
     '/',
     {
