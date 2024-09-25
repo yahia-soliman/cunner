@@ -25,12 +25,15 @@ const postRes = {
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 export default async function route(fastify: FastifyInstance) {
+  const tags = ['auth'];
   fastify.post<{ Body: User }>(
     '/login',
     {
       schema: {
         body: yup.object(postBody).required('Email and password are required'),
         response: { 200: yup.object(postRes) },
+        description: 'Login and get a session token',
+        tags,
       },
     },
     async (req) => {
@@ -48,6 +51,8 @@ export default async function route(fastify: FastifyInstance) {
           .object({ ...postBody, name: yup.string().required().min(1) })
           .required('Empty body'),
         response: { 200: yup.object(userRes) },
+        description: 'Create a new user account',
+        tags,
       },
     },
     async (req) => await userService.newUser(req.body),
@@ -55,14 +60,32 @@ export default async function route(fastify: FastifyInstance) {
 
   fastify.get(
     '/me',
-    { schema: { response: { 200: yup.object(userRes) } } },
+    {
+      schema: {
+        response: {
+          200: yup.object(userRes),
+        },
+        tags,
+        description: 'Get the current logged in user',
+      },
+    },
     async (req) => {
       return await sessionService.getUser(req.headers.authorization);
     },
   );
 
-  fastify.delete('/logout', {}, async (req) => {
-    await sessionService.deleteSession(req.headers.authorization);
-    return { message: 'Logged out' };
-  });
+  fastify.delete(
+    '/logout',
+    {
+      schema: {
+        response: { 200: yup.object({ message: yup.string() }) },
+        description: 'Logout and invalidate the current session',
+        tags,
+      },
+    },
+    async (req) => {
+      await sessionService.deleteSession(req.headers.authorization);
+      return { message: 'Logged out' };
+    },
+  );
 }
