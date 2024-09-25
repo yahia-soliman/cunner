@@ -1,11 +1,12 @@
-import { FindOptions } from 'mongodb';
 import { snippets, Snippet } from '../models/snippet.model.js';
 import * as languageService from './language.js';
 import CunnErr from '../utils/error.js';
 import { execute } from './execute.js';
+import { ObjectId } from 'mongodb';
+
+export const SNIPPET_404_ERR = new CunnErr(404, 'Snippet not found');
 
 export async function newSnippet(obj: Snippet) {
-  // check for the language and version support
   const lang = await languageService.getByName(obj.language);
 
   if (!lang.versions.includes(obj.version)) {
@@ -14,11 +15,14 @@ export async function newSnippet(obj: Snippet) {
       `Version not supported try any of (${lang.versions.join(', ')})`,
     );
   }
+
+  delete obj._id;
+  obj.updated = obj.created = new Date();
   const res = await snippets.insertOne(obj);
   return { ...obj, _id: res.insertedId };
 }
 
-export function allSnippets(filter: FindOptions, page = 0, perPage = 5) {
+export function allSnippets(filter: Partial<Snippet>, page = 0, perPage = 5) {
   const res = snippets.aggregate([
     { $match: filter },
     { $skip: page * perPage },
@@ -27,33 +31,49 @@ export function allSnippets(filter: FindOptions, page = 0, perPage = 5) {
   return res.toArray();
 }
 
-export async function getById(_id: string): Promise<Snippet> {
-  const doc = await snippets.findOne({ _id });
-  if (!doc) throw new CunnErr(404, 'Snippet not found');
+export async function getById(
+  _id: string,
+  filter: Partial<Snippet> = {},
+): Promise<Snippet> {
+  if (ObjectId.isValid(_id)) {
+    _id = new ObjectId(_id) as unknown as string;
+  }
+  const doc = await snippets.findOne({ ...filter, _id });
+  if (!doc) throw SNIPPET_404_ERR;
   return doc;
 }
 
 export async function updateSnippet(
   _id: string,
   updates: Partial<Snippet>,
+  filter: Partial<Snippet> = {},
 ): Promise<Snippet> {
   delete updates._id;
   delete updates.result;
   delete updates.created;
   delete updates.updated;
 
+  if (ObjectId.isValid(_id)) {
+    _id = new ObjectId(_id) as unknown as string;
+  }
   const doc = await snippets.findOneAndUpdate(
-    { _id },
+    { ...filter, _id },
     { $set: { ...updates, updated: new Date() }, $unset: { result: true } },
   );
-  if (!doc) throw new CunnErr(404, 'Snippet not found');
+  if (!doc) throw SNIPPET_404_ERR;
   return { ...doc, ...updates };
 }
 
-export async function deleteSnippet(_id: string) {
-  const result = await snippets.deleteOne({ _id });
-  if (result.deletedCount === 0) throw new CunnErr(404, 'Snippet not found');
-  return true;
+export async function deleteSnippet(
+  _id: string,
+  filter: Partial<Snippet> = {},
+) {
+  if (ObjectId.isValid(_id)) {
+    _id = new ObjectId(_id) as unknown as string;
+  }
+
+  const result = await snippets.deleteOne({ ...filter, _id });
+  if (result.deletedCount === 0) throw SNIPPET_404_ERR;
 }
 
 export async function runSnippet(obj: Snippet) {
