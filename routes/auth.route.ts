@@ -3,6 +3,7 @@ import * as sessionService from '../services/session.auth.js';
 import * as userService from '../services/user.js';
 import yup from 'yup';
 import { User } from '../models/user.model.js';
+import { defaultErrorResponse } from './index.js';
 
 const postBody = {
   email: yup.string().email().required(),
@@ -25,13 +26,18 @@ const postRes = {
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 export default async function route(fastify: FastifyInstance) {
-  const tags = ['auth'];
+  const tags = ['Auth'];
+  const headers = yup
+    .object({ authorization: yup.string().required() })
+    .required('Authorization header is required');
+  const security = [{ bearerAuth: [] }];
+
   fastify.post<{ Body: User }>(
     '/login',
     {
       schema: {
         body: yup.object(postBody).required('Email and password are required'),
-        response: { 200: yup.object(postRes) },
+        response: { 200: yup.object(postRes), default: defaultErrorResponse },
         description: 'Login and get a session token',
         tags,
       },
@@ -50,7 +56,7 @@ export default async function route(fastify: FastifyInstance) {
         body: yup
           .object({ ...postBody, name: yup.string().required().min(1) })
           .required('Empty body'),
-        response: { 200: yup.object(userRes) },
+        response: { 200: yup.object(userRes), default: defaultErrorResponse },
         description: 'Create a new user account',
         tags,
       },
@@ -62,11 +68,11 @@ export default async function route(fastify: FastifyInstance) {
     '/me',
     {
       schema: {
-        response: {
-          200: yup.object(userRes),
-        },
-        tags,
+        response: { 200: yup.object(userRes), default: defaultErrorResponse },
         description: 'Get the current logged in user',
+        security,
+        headers,
+        tags,
       },
     },
     async (req) => {
@@ -78,8 +84,12 @@ export default async function route(fastify: FastifyInstance) {
     '/logout',
     {
       schema: {
-        response: { 200: yup.object({ message: yup.string() }) },
+        response: {
+          200: yup.object({ message: yup.string() }),
+          default: defaultErrorResponse,
+        },
         description: 'Logout and invalidate the current session',
+        security,
         tags,
       },
     },

@@ -41,5 +41,5 @@ After logging in as an Admin, you can:
 - [x] protect /snippets route with authentication
 - [x] protect /languages route with Admin authorization
 - [x] Improve Internal Server Error handeling
-- [ ] Make documentation with Scalar or Redoc
+- [x] Make documentation with Scalar or Redoc
 - [ ] Handle /snippets/:id/run endpoint

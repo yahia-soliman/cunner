@@ -2,11 +2,12 @@ import Fastify from 'fastify';
 import snippetRoute from './routes/snippet.route.js';
 import languageRoute from './routes/language.route.js';
 import authRoute from './routes/auth.route.js';
-import * as yupCompilers from './utils/yup-fastify-compilers.js';
 import { createAdmins } from './utils/admin.js';
-import ScalarApiReference from '@scalar/fastify-api-reference';
-import fastifySwagger from '@fastify/swagger';
 import { jsonSchemaTransformer } from 'fastify-type-provider-yup';
+import * as yupCompilers from './utils/yup-fastify-compilers.js';
+import * as scalar from '@scalar/fastify-api-reference';
+import fastifySwagger from '@fastify/swagger';
+// import fastifySwaggerUi from '@fastify/swagger-ui';
 
 const fastify = Fastify({ logger: true });
 
@@ -25,26 +26,42 @@ await fastify.register(fastifySwagger, {
     },
     servers: [{ url: 'http://localhost:3000' }],
     tags: [
-      { name: 'auth', description: 'Authentication and session management' },
-      { name: 'snippets', description: 'CRUD operations for code snippets' },
-      { name: 'languages', description: 'CRUD operations for languages' },
+      { name: 'Auth', description: 'Authentication and session management' },
+      { name: 'Snippets', description: 'CRUD operations for code snippets' },
+      { name: 'Languages', description: 'CRUD operations for languages' },
+      {
+        name: 'Admin',
+        description: 'Requires the current logged in user to be an admin',
+      },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          bearerFormat: 'UUID',
           description: 'To get a token, use the /auth/login endpoint',
         },
       },
     },
   },
 });
-fastify.get('/', async () => {
-  return { status: 'ok' };
+
+await fastify.register(scalar.default, {
+  routePrefix: '/doc',
+
+  configuration: {
+    metaData: {
+      title: 'Cunner - Code Runner',
+    },
+    theme: 'kepler',
+    defaultHttpClient: {
+      targetKey: 'http',
+      clientKey: 'http1.1',
+    },
+  },
 });
-await fastify.register(ScalarApiReference, { routePrefix: '/doc' });
+
+// await fastify.register(fastifySwaggerUi, { routePrefix: 'swagger' });
 
 await fastify.register(snippetRoute, { prefix: '/snippets' });
 await fastify.register(languageRoute, { prefix: '/languages' });

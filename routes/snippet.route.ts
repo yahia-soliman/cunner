@@ -3,6 +3,7 @@ import * as service from '../services/snippet.js';
 import * as session from '../services/session.auth.js';
 import { Snippet } from '../models/snippet.model.js';
 import yup from 'yup';
+import { defaultErrorResponse } from './index.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -40,6 +41,8 @@ const resBody = {
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 export default async function route(fastify: FastifyInstance) {
+  const tags = ['Snippets'];
+  const security = [{ bearerAuth: [] }];
   fastify.decorateRequest('userId', '');
   fastify.addHook('preValidation', async (req) => {
     const user = await session.getUser(req.headers.authorization);
@@ -51,7 +54,10 @@ export default async function route(fastify: FastifyInstance) {
     {
       schema: {
         body: yup.object(postBody).required('Empty body'),
-        response: { 200: yup.object(resBody) },
+        response: { 200: yup.object(resBody), default: defaultErrorResponse },
+        description: 'Create a new snippet',
+        security,
+        tags,
       },
     },
     async (req) => {
@@ -63,7 +69,13 @@ export default async function route(fastify: FastifyInstance) {
     '/',
     {
       schema: {
-        response: { 200: yup.array().of(yup.object(resBody)) },
+        response: {
+          200: yup.array().of(yup.object(resBody)),
+          default: defaultErrorResponse,
+        },
+        description: 'Get all snippets created by the logged in user',
+        tags,
+        security,
       },
     },
     async (req) => {
@@ -71,18 +83,32 @@ export default async function route(fastify: FastifyInstance) {
     },
   );
 
-  fastify.get<ReqT>('/:id', async (request) => {
-    const { id } = request.params;
-    const snippet = await service.getById(id, { userId: request.userId });
-    return snippet;
-  });
+  fastify.get<ReqT>(
+    '/:id',
+    {
+      schema: {
+        response: { 200: yup.object(resBody), default: defaultErrorResponse },
+        description: 'Get a single snippet details by id',
+        tags,
+        security,
+      },
+    },
+    async (request) => {
+      const { id } = request.params;
+      const snippet = await service.getById(id, { userId: request.userId });
+      return snippet;
+    },
+  );
 
   fastify.patch<ReqT>(
     '/:id',
     {
       schema: {
         body: yup.object(patchBody).required('Empty body'),
-        response: { 200: yup.object(resBody) },
+        response: { 200: yup.object(resBody), default: defaultErrorResponse },
+        description: 'Update a snippet by id',
+        tags,
+        security,
       },
     },
     async (request) => {
@@ -93,9 +119,20 @@ export default async function route(fastify: FastifyInstance) {
     },
   );
 
-  fastify.delete<ReqT>('/:id', async (request) => {
-    const { id } = request.params;
-    await service.deleteSnippet(id, { userId: request.userId });
-    return {};
-  });
+  fastify.delete<ReqT>(
+    '/:id',
+    {
+      schema: {
+        response: { 200: yup.object({}), default: defaultErrorResponse },
+        description: 'Delete a snippet by id',
+        tags,
+        security,
+      },
+    },
+    async (request) => {
+      const { id } = request.params;
+      await service.deleteSnippet(id, { userId: request.userId });
+      return {};
+    },
+  );
 }
