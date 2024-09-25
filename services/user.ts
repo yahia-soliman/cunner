@@ -1,15 +1,16 @@
-import { User, users } from "../models/user.model.js";
-import CunnErr from "../utils/error.js";
-import { hashpw } from "../utils/hashing.js";
+import { ObjectId } from 'mongodb';
+import { User, users } from '../models/user.model.js';
+import CunnErr from '../utils/error.js';
+import { hashpw } from '../utils/hashing.js';
 
-const USER_NOT_FOUND_ERR = new CunnErr(404, "User not found");
+const USER_NOT_FOUND_ERR = new CunnErr(404, 'User not found');
 
 export async function newUser(obj: User) {
   const { email } = obj;
 
   const user = await users.findOne({ email });
 
-  if (user) throw new CunnErr(409, "User already exists");
+  if (user) throw new CunnErr(409, 'User already exists');
 
   obj.created = obj.updated = new Date();
   obj.password = hashpw(obj.password);
@@ -24,8 +25,9 @@ export async function allUsers() {
   return res.toArray();
 }
 
-export async function getUserById(_id: string) {
-  const user = await users.findOne({ _id });
+export async function getUserById(id: string) {
+  const _id: unknown = new ObjectId(id);
+  const user = await users.findOne({ _id: _id as string });
   if (!user) throw USER_NOT_FOUND_ERR;
   return user;
 }
@@ -38,7 +40,7 @@ export async function updateUser(_id: string, updates: Partial<User>) {
 
   const doc = await users.findOneAndUpdate(
     { _id },
-    { $set: { ...updates, updated: new Date() } }
+    { $set: { ...updates, updated: new Date() } },
   );
   if (!doc) throw USER_NOT_FOUND_ERR;
   return { ...doc, ...updates };

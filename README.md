@@ -37,5 +37,7 @@ After logging in as an Admin, you can:
 - [x] Create and Test the Snippet Service
 - [x] Build the API and connect it with the services
 - [x] Handle Validation before accessing the services
-- [ ] Handle Auth service, and Auth middlewares
+- [x] Handle Auth service, and Auth routes
+- [ ] protect /snippets route with authentication
+- [ ] protect /languages route with Admin authorization
 - [ ] Make documentation with Scalar or Redoc

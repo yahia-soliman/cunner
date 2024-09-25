@@ -3,8 +3,10 @@ import { User, users } from '../models/user.model.js';
 import { v4 as uuidv4 } from 'uuid';
 import CunnErr from '../utils/error.js';
 import { checkpw } from '../utils/hashing.js';
+import { getUserById } from './user.js';
 
-const INVALID_CREDS_ERR = new CunnErr(401, 'Invalid Email or Password');
+export const INVALID_CREDS_ERR = new CunnErr(401, 'Invalid Email or Password');
+export const INVALID_TOKEN_ERR = new CunnErr(401, 'Invalid Token');
 const SESSION_EXPIRY = 24 * 60 * 60;
 
 /**
@@ -17,6 +19,15 @@ export async function getCreds(basicAuth: string): Promise<string[]> {
   const base64Creds = basicAuth.split(' ')[1] || '';
   const credentials = Buffer.from(base64Creds, 'base64').toString('ascii');
   return credentials.split(':');
+}
+
+/**
+ * Extract the session token from an Authorization header
+ */
+export function getSessionToken(authHeader?: string): string {
+  const [kind, token] = authHeader?.split(' ') || [];
+  if (kind !== 'Bearer' || !token) throw INVALID_TOKEN_ERR;
+  return token;
 }
 
 /**
@@ -40,35 +51,36 @@ export async function createSession(
 
   const token = uuidv4();
 
-  await redisClient.set(token, user._id, { EX: SESSION_EXPIRY });
+  await redisClient.set(token, user._id.toString(), { EX: SESSION_EXPIRY });
   return token;
 }
 
 /**
  * Get the user associated with a session token
- * @param {string} token - The session token
+ * @param {string} authHeader - The session token
  *
  * @returns {Promise<User>} - The user object
  */
-export async function getUser(token: string): Promise<User> {
-  if (!token) throw new CunnErr(401);
+export async function getUser(authHeader: string | undefined): Promise<User> {
+  const token = getSessionToken(authHeader);
 
   const _id = await redisClient.get(token);
-  if (!_id) throw new CunnErr(401);
+  if (!_id) throw INVALID_TOKEN_ERR;
 
-  const user = await users.findOne({ _id });
-  if (!user) throw new CunnErr(401);
+  const user = await getUserById(_id);
+  console.log(user);
+  if (!user) throw INVALID_TOKEN_ERR;
 
   return user;
 }
 
 /**
  * Delete a session token
- * @param {string} token - The session token
+ * @param {string} authHeader - The session token
  *
  * @throws {CunnErr} 401 - If the token is invalid
  */
-export async function deleteSession(token: string) {
-  await getUser(token);
+export async function deleteSession(authHeader?: string) {
+  const token = getSessionToken(authHeader);
   await redisClient.del(token);
 }
