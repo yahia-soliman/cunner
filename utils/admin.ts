@@ -7,6 +7,11 @@ export async function createAdmins() {
   const pass = process.env.ADMIN_PASS;
   if (!(email && pass)) return;
   const password = hashpw(pass);
-  await users.deleteMany({ isAdmin: true });
-  await users.insertOne({ name, email, password, isAdmin: true });
+  const admin = await users.findOne({ email });
+  if (admin) {
+    await users.updateOne({ email }, { $set: { password, isAdmin: true } });
+  } else {
+    await users.deleteMany({ isAdmin: true });
+    await users.insertOne({ name, email, password, isAdmin: true });
+  }
 }

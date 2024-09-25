@@ -38,6 +38,7 @@ After logging in as an Admin, you can:
 - [x] Build the API and connect it with the services
 - [x] Handle Validation before accessing the services
 - [x] Handle Auth service, and Auth routes
-- [ ] protect /snippets route with authentication
-- [ ] protect /languages route with Admin authorization
+- [x] protect /snippets route with authentication
+- [x] protect /languages route with Admin authorization
+- [ ] Improve Internal Server Error handeling
 - [ ] Make documentation with Scalar or Redoc

@@ -1,13 +1,12 @@
 import { FastifyInstance } from 'fastify';
-import * as service from '../services/language.js';
-import { Language } from '../models/language.model.js';
 import yup from 'yup';
+import * as service from '../services/language.js';
+import * as session from '../services/session.auth.js';
+import { Language } from '../models/language.model.js';
 
-interface BodyOrParams {
-  name: string;
-  version: string;
-  versions: string[];
-  cmd: string[];
+interface CustomReq {
+  Params: { name: string; version: string };
+  Body: Language;
 }
 
 const defaultProps = {
@@ -33,24 +32,6 @@ const postBody = {
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
  */
 export default async function route(fastify: FastifyInstance) {
-  fastify.post<{ Body: Language }>(
-    '/',
-    {
-      schema: {
-        body: yup.object(postBody).required(),
-        response: { 200: yup.object(getIdRes) },
-      },
-    },
-    async (req) => {
-      return service.newLanguage(req.body);
-    },
-  );
-
-  fastify.post<{ Params: BodyOrParams }>('/:name/:version', async (request) => {
-    const { name, version } = request.params;
-    return service.newVersion(name, version);
-  });
-
   fastify.get(
     '/',
     {
@@ -58,8 +39,7 @@ export default async function route(fastify: FastifyInstance) {
     },
     async () => service.getAll(),
   );
-
-  fastify.get<{ Params: BodyOrParams }>(
+  fastify.get<CustomReq>(
     '/:name',
     {
       schema: { response: { 200: yup.object(getIdRes) } },
@@ -67,23 +47,49 @@ export default async function route(fastify: FastifyInstance) {
     async (req) => service.getByName(req.params.name),
   );
 
-  fastify.patch<{ Params: BodyOrParams; Body: BodyOrParams }>(
-    '/:name',
-    async (request) => {
-      // we currently update only the cmd
-      const { cmd } = request.body;
+  fastify.register(async function (fastify: FastifyInstance) {
+    fastify.addHook('preValidation', async (req) => {
+      const user = await session.getUser(req.headers.authorization);
+      if (!user?.isAdmin) throw session.INVALID_TOKEN_ERR;
+    });
+    fastify.post<CustomReq>(
+      '/',
+      {
+        schema: {
+          body: yup.object(postBody).required('Empty body'),
+          response: { 200: yup.object(getIdRes) },
+        },
+      },
+      async (req) => {
+        return service.newLanguage(req.body);
+      },
+    );
+
+    fastify.post<CustomReq>('/:name/:version', async (request) => {
+      const { name, version } = request.params;
+      return service.newVersion(name, version);
+    });
+
+    fastify.put<CustomReq>(
+      '/:name/cmd',
+      {
+        schema: { body: yup.array(yup.string()).min(1).required('Empty body') },
+      },
+      async (request) => {
+        // we currently update only the cmd
+        const cmd = request.body as unknown;
+        const { name } = request.params;
+        return service.updateCmd(name, cmd as string[]);
+      },
+    );
+
+    fastify.delete<CustomReq>('/:name', async (request) => {
       const { name } = request.params;
-      return service.updateCmd(name, cmd);
-    },
-  );
+      return service.deleteLanguage(name);
+    });
 
-  fastify.delete<{ Params: BodyOrParams }>('/:name', async (request) => {
-    const { name } = request.params;
-    return service.deleteLanguage(name);
+    fastify.delete<CustomReq>('/:name/:version', async ({ params }) =>
+      service.deleteVersion(params.name, params.version),
+    );
   });
-
-  fastify.delete<{ Params: BodyOrParams }>(
-    '/:name/:version',
-    async ({ params }) => service.deleteVersion(params.name, params.version),
-  );
 }
