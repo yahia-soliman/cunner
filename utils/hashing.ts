@@ -9,9 +9,7 @@ import { randomBytes, scryptSync } from 'crypto';
  */
 export function hashpw(password: string, salt?: string): string {
   salt ||= randomBytes(16).toString('hex');
-  console.log(salt);
   const hash = scryptSync(password, salt, 32).toString('hex');
-  console.log(hash);
   return hash + salt;
 }
 

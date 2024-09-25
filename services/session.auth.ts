@@ -68,7 +68,6 @@ export async function getUser(authHeader: string | undefined): Promise<User> {
   if (!_id) throw INVALID_TOKEN_ERR;
 
   const user = await getUserById(_id);
-  console.log(user);
   if (!user) throw INVALID_TOKEN_ERR;
 
   return user;

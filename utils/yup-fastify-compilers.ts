@@ -4,7 +4,7 @@ import { FastifySerializerCompiler } from 'fastify/types/schema.js';
 
 const yupOptions: ValidateOptions = {
   strict: false,
-  abortEarly: false,
+  abortEarly: true,
   stripUnknown: true,
   recursive: true,
 };
