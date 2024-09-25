@@ -7,13 +7,6 @@ import { createAdmins } from './utils/admin.js';
 
 const fastify = Fastify({ logger: true });
 
-// app.addHook('onRequest', (request, reply, done) => {
-//   const [type, token] = request.headers.authorization?.split(' ') || [];
-//   if (type !== 'Bearer' || !token)
-//     reply.status(401).send();
-//   else done();
-// });
-
 fastify.setValidatorCompiler(yupCompilers.validatorCompiler);
 fastify.setSerializerCompiler(yupCompilers.serializerCompiler);
 

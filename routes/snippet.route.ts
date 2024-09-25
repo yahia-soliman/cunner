@@ -41,7 +41,7 @@ const resBody = {
  */
 export default async function route(fastify: FastifyInstance) {
   fastify.decorateRequest('userId', '');
-  fastify.addHook('preHandler', async (req) => {
+  fastify.addHook('preValidation', async (req) => {
     const user = await session.getUser(req.headers.authorization);
     req.userId = user._id?.toString() || '';
   });
