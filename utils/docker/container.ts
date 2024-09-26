@@ -9,10 +9,12 @@ export interface ContainerRunOpts {
 export class Container {
   id: string;
   private prefix: string;
+  exitCode: number;
 
   constructor(id: string) {
     this.id = id;
     this.prefix = `/containers/${id}`;
+    this.exitCode = -1;
   }
 
   /** Create a container */
@@ -40,12 +42,22 @@ export class Container {
 
   /** Wait for the container to exit */
   async wait() {
-    return await dockerAPI(this.prefix + '/wait', 'POST');
+    const res = await dockerAPI(this.prefix + '/wait', 'POST');
+    const { StatusCode } = JSON.parse(res.body);
+    this.exitCode = StatusCode;
+    return res;
   }
 
   /** Get the logs from a container */
-  async logs() {
-    return await dockerAPI(this.prefix + '/logs?stdout=1');
+  async logs(): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+    const stdout = await dockerAPI(this.prefix + '/logs?stdout=1');
+    const stderr = await dockerAPI(this.prefix + '/logs?stderr=1');
+    const result = {
+      stdout: stdout.body,
+      stderr: stderr.body,
+      exitCode: this.exitCode,
+    };
+    return result;
   }
 
   /** Delete the container */

@@ -100,6 +100,24 @@ export default async function route(fastify: FastifyInstance) {
     },
   );
 
+  fastify.get<ReqT>(
+    '/:id/run',
+    {
+      schema: {
+        response: { 200: yup.object(resBody), default: defaultErrorResponse },
+        description: 'Run a snippet by id',
+        tags,
+        security,
+      },
+    },
+    async (request) => {
+      const { id } = request.params;
+      const snippet = await service.getById(id, { userId: request.userId });
+      const result = await service.runSnippet(snippet);
+      return { ...snippet, result };
+    },
+  );
+
   fastify.patch<ReqT>(
     '/:id',
     {

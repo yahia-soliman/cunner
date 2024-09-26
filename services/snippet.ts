@@ -83,7 +83,13 @@ export async function runSnippet(obj: Snippet) {
     throw new CunnErr(404, `Version ${version} is no longer supported`);
   }
   try {
-    await execute(`${languageDoc.name}:${version}`, languageDoc.cmd, code);
+    const result = await execute(
+      `${languageDoc.name}:${version}`,
+      languageDoc.cmd,
+      code,
+    );
+    updateSnippet(obj._id as string, { result });
+    return result;
   } catch (err) {
     throw new CunnErr(500, (err as Error).message);
   }

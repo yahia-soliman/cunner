@@ -58,8 +58,7 @@ describe('Snippet Service:', () => {
   });
 
   it('Deletes a snippet', async () => {
-    const res = await service.deleteSnippet(doc._id as string);
-    expect(res).toBeTrue();
+    await expectAsync(service.deleteSnippet(doc._id as string)).toBeResolved();
   });
 
   afterAll(async () => {

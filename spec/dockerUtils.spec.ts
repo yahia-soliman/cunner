@@ -49,8 +49,9 @@ describe('Container Class:', () => {
   });
 
   it('gets the logs', async () => {
-    const res = await container.logs();
-    expect(res.body).toContain('Hello There!');
+    const result = await container.logs();
+    expect(result.stdout).toContain('Hello There!');
+    expect(result.exitCode).toBe(0);
   });
 
   it('deletes the container', async () => {

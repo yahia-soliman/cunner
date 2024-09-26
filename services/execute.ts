@@ -17,7 +17,7 @@ export async function execute(Image: string, Cmd: string[], code: string) {
 
   if (container === null) throw new Error('Language is not supported');
 
-  await container.writeFile('SOURCE_CODE', code, './');
+  await container.writeFile('SOURCE_FILE', code, './');
 
   await container.start(true);
 

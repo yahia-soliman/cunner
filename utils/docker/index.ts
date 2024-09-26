@@ -22,6 +22,8 @@ export function dockerAPI(
     const req = http.request({ socketPath, path, method }, (res) => {
       let body = '';
       res.on('data', (chunk: Buffer) => {
+        // if the chunk starts with a 0x01, remove first 8 bytes
+        if (chunk[0] === 0x01 || chunk[0] === 0x02) chunk = chunk.subarray(8);
         body += chunk.toString();
       });
       res.on('end', () => resolve({ body, statusCode: res.statusCode }));

@@ -7,6 +7,10 @@
         {
           "path": "docs/introduction.md",
           "type": "page"
+        },
+        {
+          "path": "docs/setup.md",
+          "type": "page"
         }
       ]
     }
