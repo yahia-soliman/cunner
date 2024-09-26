@@ -15,5 +15,8 @@
       ]
     }
   ],
-  "references": []
+  "references": [{
+    "name": "API Reference",
+    "path": "docs/openapi.json"
+  }]
 }
