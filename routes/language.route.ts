@@ -76,7 +76,8 @@ export default async function route(fastify: FastifyInstance) {
             200: yup.object(getIdRes),
             default: defaultErrorResponse,
           },
-          description: 'Add and support a new language',
+          description:
+            'Add and support a new language:\n\n- **name** should be a valid Docker image that can be pulled from Docker hub\n- **versions** is an array of valid Docker tags for the chosen image\n- **cmd**: is an array represents the command to run a `SOURCE_FILE` written in that language\n\nExample request body:\n\n```json\n{\n  "name": "python",\n  "versions": ["latest"],\n  "cmd": ["python", "SOURCE_FILE"]\n}\n```\n\nNotice the `SOURCE_FILE` this is a placeholder for the actual file name, it will be automatically replaced by the actual file name when running the code',
           security,
           tags,
         },

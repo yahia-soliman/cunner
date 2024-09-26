@@ -2,24 +2,23 @@
 
 A cloud computing platform, where you can test the code output safely.
 
+This API aims to provide an easy way to run your code snippets in a remote machine, without having to install anything.
+It provides an API for both the user to create, run, read, update, or delete snippets, and for the administirator of the application to support/unsupport different languages and versions.
 
 ## Features
-- **User Authentication**
-- Storing code snippets, executing them, and storing the output
-- Supporting different languges dynamicly from Docker hub, using Admin account
-- Supporting different versions of languages
+- **User Authentication**: the users can only run code snippets and store them when they have an account.
+- **Code Snippets**: Users can store, run, inspect their snippets.
+- **Language Support**: Admins can manage the available language, and versions through the API so the user can work with.
 
 
 ### Usage
-After creating an account and registering you can discover available languages and versions using `GET /languages` you can Create, Retrieve, Update, or Delete snippets and run them `GET /snippets/{id}/run`
+- Guests can show available languages, create an account, and login to an account.
+- Users can do CRUD operations and run their snippets.
+- Admins can do CRUD operations over languages and versions.
 
-### Adminstration
-After logging in as an Admin, you can:
-- Support different languages with different versions, as long as it is in Docker hub and you know how to run a file written with it.
-- Delete entire languages or specific versions
-
-
-## Dependencies
+## Project Setup & Contribution
+### Installation
+If you want to run the project locally, you need to install the following dependencies:
 
 |                                       | recommended version |
 | ------------------------------------- | ------------------- |
@@ -28,18 +27,38 @@ After logging in as an Admin, you can:
 | [DockerAPI](https://www.docker.com/)  | 1.46                |
 | [Redis](https://redis.io/)            | 7.0.8               |
 
+After installing the dependencies, you can clone the repository and run the following commands:
 
-## TODO
-- [x] Create Docker API abstraction
-- [x] Create Docker Container Wrapper
-- [x] Create Docker Image Wrapper
-- [x] Create and Test the Language Service
-- [x] Create and Test the Snippet Service
-- [x] Build the API and connect it with the services
-- [x] Handle Validation before accessing the services
-- [x] Handle Auth service, and Auth routes
-- [x] protect /snippets route with authentication
-- [x] protect /languages route with Admin authorization
-- [x] Improve Internal Server Error handeling
-- [x] Make documentation with Scalar or Redoc
-- [ ] Handle /snippets/:id/run endpoint
+```bash
+npm install
+```
+
+## Running the project
+```bash
+./tmux.sh
+```
+This script will start a tmux session with the following windows:
+- `editor`: where the editor `neovim` will run
+- `server`: where the nodejs, redis, and typescript compiler will run
+- `client`: where mongosh will run to interact with the database
+
+if you don't have tmux installed, you can run the following commands (each in a different terminal):
+
+```bash
+redis-server
+mongod
+npm run build:dev
+npm run server:dev
+```
+
+### Environment Variables
+You need to create a `.env` file in the root of the project with the following variables, you can adjust it based on your setup:
+
+```bash
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=cunner
+
+ADMIN_NAME=cunner
+ADMIN_EMAIL=admin@yes
+ADMIN_PASS=strongpass
+```
