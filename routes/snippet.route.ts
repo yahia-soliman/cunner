@@ -15,10 +15,9 @@ interface ReqT {
   Body: Snippet;
 }
 
-const postBody = {
+const postQuery = {
   language: yup.string().required(),
   version: yup.string().required(),
-  code: yup.string().required().min(3),
 };
 
 const patchBody = {
@@ -49,19 +48,27 @@ export default async function route(fastify: FastifyInstance) {
     req.userId = user._id?.toString() || '';
   });
 
-  fastify.post<ReqT>(
+  fastify.post(
     '/',
     {
       schema: {
-        body: yup.object(postBody).required('Empty body'),
-        response: { 200: yup.object(resBody), default: defaultErrorResponse },
-        description: 'Create a new snippet',
+        consumes: ['text/plain'],
+        querystring: yup.object(postQuery),
+        body: yup.string().required('Empty Body: provide the code snippet'),
+        response: { 200: yup.object(resBody)},
+        description: 'Create a new snippet\n\n- Provide metadata in the querystring\n- And the code snippet in the body',
         security,
         tags,
       },
     },
     async (req) => {
-      return service.newSnippet({ ...req.body, userId: req.userId });
+      const { language, version } = req.query as Snippet;
+      return service.newSnippet({
+        language,
+        version,
+        code: req.body as string,
+        userId: req.userId,
+      });
     },
   );
 
@@ -141,7 +148,7 @@ export default async function route(fastify: FastifyInstance) {
     '/:id',
     {
       schema: {
-        response: { 200: yup.object({}), default: defaultErrorResponse },
+        response: { default: defaultErrorResponse },
         description: 'Delete a snippet by id',
         tags,
         security,
@@ -150,7 +157,7 @@ export default async function route(fastify: FastifyInstance) {
     async (request) => {
       const { id } = request.params;
       await service.deleteSnippet(id, { userId: request.userId });
-      return {};
+      return { message: 'deleted the snippet' };
     },
   );
 }
